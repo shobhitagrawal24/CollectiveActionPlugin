@@ -1,14 +1,12 @@
-
 <?php
 /**
  * Plugin Name: Collective Action Problem
  * Plugin URI: http://www.researchtransparency.org/
  * Description: This Plugin Solves The Collective Action Problem.
  * Version: 1.0.0
- * Author: Shobhit Agrawal
+ * Author: Shobhit Agrawal, Abhishek Kapoor, Ankit Gupta
  * Author URI: http://www.researchtransparency.org/
  */
-
 
 $GLOBALS[ 'wp_log' ][ 'Collective Action Problem' ][] = 'Enable Logging 1';
 $GLOBALS[ 'wp_log_plugins' ][] = 'Collective Action Problem';
@@ -75,6 +73,7 @@ function create_new_commitment($commitment_content,$max_threshold){
                 )
              );
 }
+
 /*
  * This function is used to insert user commitment in to DB
  *
@@ -221,6 +220,25 @@ function get_public_commit_of_user($userid){
     $table_name =$wpdb->prefix . 'psy_user_commitment';
     $commitments = $wpdb->get_results("SELECT * from $table_name WHERE user_id = $userid AND status ='PUBLIC' ",'ARRAY_A');
     return $commitments;
+}
+
+**
+ * Update a user's commitment. Only if it is not PUBLIC yet 
+ * @global type $wpdb
+ * @param type $userId
+ * @param type $commitId
+ * @param type $threshold
+ * @return String eg: "PUBLIC"
+ */
+function update_user_commitment($userId,$commitId,$threshold){
+    // TODO: Not Yet complete
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'psy_user_commitment';
+    $result = $wpdb->get_results("SELECT status from $table_name WHERE user_id = $userId AND commit_id = $commitId",'ARRAY_A');
+    if($result[0]["status"]== "PUBLIC"){
+        return false;
+    }
+    return $result[0]["status"];
 }
 
 function test_collective(){
