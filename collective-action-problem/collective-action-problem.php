@@ -42,7 +42,7 @@ function my_plugin_create_db() {
 
 		$sql2 = "CREATE TABLE $table_name2 (
 			user_id mediumint(9) NOT NULL,
-			commit_id mediumint(9) NOT NULL,	
+			commit_id mediumint(9) NOT NULL,
 			time_signed datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			user_threshold smallint(5) NOT NULL,
 			status varchar(20) NOT NULL,
@@ -51,20 +51,20 @@ function my_plugin_create_db() {
 
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 		dbDelta( $sql2 );
-                
+
 }
 
 function create_new_commitment($commitment_content,$max_threshold){
      collective_log("Creating a New Commitment to be signed with Threshold = ".$max_threshold);
      global $wpdb;
-        
+
 	if(!$commitment_content || !$max_threshold){
-		return false;	
+		return false;
 	}
-	
+
 	$table_name = $wpdb->prefix . 'psy_commitment';
         $date = date('Y-m-d H:i:s');
-        
+
         $wpdb->insert(
                 $table_name,
                 array(
@@ -77,21 +77,21 @@ function create_new_commitment($commitment_content,$max_threshold){
 }
 /*
  * This function is used to insert user commitment in to DB
- * 
+ *
  * Called only once per submit
  */
 function sign_commitment($commitment_id,$user_id,$user_threshold){
      collective_log("Commitment signed by user with ID = ".$user_id." commitment ID = ".$commitment_id);
-   
+
     global $wpdb;
-        
+
 	if(!$commitment_id || !$user_id){
-		return false;	
+		return false;
 	}
-	
+
 	$table_name = $wpdb->prefix . 'psy_user_commitment';
         $date = date('Y-m-d H:i:s');
-        
+
         $wpdb->insert(
                 $table_name,
                 array(
@@ -130,7 +130,7 @@ function count_users_with_threshold($threshold, $commit_id){
     $wpdb->show_errors();
     $table_name = $wpdb->prefix . 'psy_user_commitment';
     $query = "SELECT COUNT(*) from $table_name WHERE commit_id= $commit_id AND user_threshold = $threshold";
- 
+
     $count = $wpdb->get_results($wpdb->prepare($query),'ARRAY_A');
     return $count[0]["COUNT(*)"];
 }
@@ -155,7 +155,7 @@ function get_users_array_to_sign($threshold, $commit_id){
 function update_status_to_signed($user_id, $commit_id){
     global $wpdb;
     $table_name = $wpdb->prefix . 'psy_user_commitment';
-   
+
      $status = $wpdb->update(
             $table_name,
             array(
@@ -166,7 +166,7 @@ function update_status_to_signed($user_id, $commit_id){
                 'user_id'=> $user_id
             )
          );
-    
+
     return $status;
 }
 
@@ -176,7 +176,7 @@ function update_status_to_signed($user_id, $commit_id){
 function update_status_to_public($commit_id){
     global $wpdb;
     $table_name = $wpdb->prefix . 'psy_user_commitment';
- 
+
     $status = $wpdb->update(
             $table_name,
             array(
@@ -196,7 +196,7 @@ function update_current_counter($commit_id,$count){
     collective_log("inside update counter");
     global $wpdb;
     $table_name =$wpdb->prefix . 'psy_commitment';
-    
+
     $status = $wpdb->update(
             $table_name,
             array(
@@ -213,9 +213,7 @@ function update_current_counter($commit_id,$count){
 function test_collective(){
     collective_log("inside Test collection");
     create_new_commitment('blasfamy', 99);
-   
+
 }
 
-
-
-
+//Addition of further functionality
