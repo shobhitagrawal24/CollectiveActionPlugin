@@ -210,6 +210,19 @@ function update_current_counter($commit_id,$count){
    return $status;
 }
 
+/**
+ *
+ * @global type $wpdb
+ * @param Integer $userid
+ * @return Array rows indexed from 0
+ */
+function get_public_commit_of_user($userid){
+    global $wpdb;
+    $table_name =$wpdb->prefix . 'psy_user_commitment';
+    $commitments = $wpdb->get_results("SELECT * from $table_name WHERE user_id = $userid AND status ='PUBLIC' ",'ARRAY_A');
+    return $commitments;
+}
+
 function test_collective(){
     collective_log("inside Test collection");
     create_new_commitment('blasfamy', 99);
