@@ -222,8 +222,8 @@ function get_public_commit_of_user($userid){
     return $commitments;
 }
 
-**
- * Update a user's commitment. Only if it is not PUBLIC yet 
+/*
+ * Update a user's commitment. Only if it is not PUBLIC yet
  * @global type $wpdb
  * @param type $userId
  * @param type $commitId
