@@ -248,3 +248,23 @@ function test_collective(){
 }
 
 //Addition of further functionality
+
+//Addition of subpages
+
+function cap_add_submenu_page(){
+
+  add_submenu_page( 'options-general.php',
+                    'Coll. Act. Prob.',
+                    'Coll. Act. Prob.',
+                    'manage_options',
+                    'collactprob',
+                    'cap_settings_callback');   //Callback to render settings page
+
+}
+
+function cap_settings_callback(){
+  echo "This is for the settings page of Collective Action Problem. ";
+  echo "Use this page to render the settings of the Collective Action Problem Plugin.";
+}
+
+add_action('admin_menu', 'cap_add_submenu_page');
