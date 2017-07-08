@@ -32,7 +32,6 @@ function my_plugin_create_db() {
 	$sql1 = "CREATE TABLE $table_name1 (
 		id mediumint(9) NOT NULL AUTO_INCREMENT,
 		time_created datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-		max_threshold smallint(5) NOT NULL,
 		current_count smallint(5) NOT NULL,
 		content varchar(500) NOT NULL,
 		allowed_thresholds varchar(100) NOT NULL,
@@ -50,6 +49,8 @@ function my_plugin_create_db() {
 			time_signed datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
 			user_threshold smallint(5) NOT NULL,
 			status varchar(20) NOT NULL,
+			affiliation varchar(250),
+			user_name varchar(250),
 			PRIMARY KEY (user_id,commit_id)
 		) $charset_collate;";
 
@@ -154,6 +155,7 @@ function sign_commitment(){
     $url=$_POST['url'];
     $affiliation =$_POST['affiliation'];
     $name = $_POST['user_name'];
+    collective_log("USER NAME =".$name);
 
     /*$commitment_id=1;
     $user_id=31;
@@ -177,7 +179,9 @@ function sign_commitment(){
                     'commit_id'=>$commitment_id,
                     'time_signed'=> $date,
                     'user_threshold'=> $user_threshold,
-                    'status'=> 'PRIVATE'
+                    'status'=> 'PRIVATE',
+                    'affiliation'=>$affiliation,
+                    'user_name'=>$name
                 )
              );
         collective_Algorithm($commitment_id,$user_id,$user_threshold);
@@ -357,10 +361,54 @@ add_shortcode("user-commitments","render_user_commitments");
  * @return String eg: "PUBLIC"
  */
 
-function get_all_public_commitments(){
+function get_public_commitments(){
     global $wpdb;
-    $table_name = $wpdb->prefix . 'psy_user_commitment';
+    $table_name1 = $wpdb->prefix . 'psy_user_commitment';
+    $table_name2 = $wpdb->prefix . 'psy_commitment';
+    $query = "SELECT a.content , b.time_signed,b.user_name,b.affiliation FROM $table_name1 b , $table_name2 a 
+              WHERE a.id = b.commit_id AND b.status = 'PUBLIC'";
+    $commitments = $wpdb->get_results($query,"ARRAY_A");
+    return $commitments;
 }
+
+function render_all_public_commitments(){
+    ob_start();
+$user_commitments = get_public_commitments()?>
+
+    <form>
+        <h3 align="center">All Signed Commitments</h3>
+        <h5> Total Signed Commitments : <?php echo sizeof($user_commitments) ?></h5>
+        <hr>
+        <table>
+            <tr>
+                <td><h6>Signed By</h6></td>
+                <td><h6>From</h6></td>
+                <td><h6>Time Signed At</h6></td>
+                <td><h6>Commitment</h6></td>
+            </tr>
+            <ol>
+                <?php
+                foreach ($user_commitments as $c){ ?>
+
+                    <tr>
+                        <td><div><?php echo $c['user_name'] ?></div></td>
+                        <td><div><?php echo $c['affiliation'] ?></div></td>
+                        <td><div><?php echo $c['time_signed']?></div></td>
+                        <td><div><?php echo $c['content'] ?></div></td>
+
+                    </tr>
+
+
+                <?php }?>
+            </ol>
+        </table>
+    </form>
+
+<?php
+    return ob_get_clean();
+}
+add_shortcode("public-commitments","render_all_public_commitments");
+
 function update_user_commitment($userId,$commitId,$threshold){
     // TODO: Not Yet complete
     global $wpdb;
@@ -415,6 +463,17 @@ function get_all_commitments(){
     $table_name =$wpdb->prefix . 'psy_commitment';
     $commitments = $wpdb->get_results("SELECT * from $table_name",'ARRAY_A');
 
+    return $commitments;
+}
+
+
+function get_unsigned_commitments($user_id){
+    collective_log("Getting Unsigned Commits for user Id = ".$user_id);
+    global $wpdb;
+    $table_name1 =$wpdb->prefix . 'psy_commitment';
+    $table_name2 =$wpdb->prefix . 'psy_user_commitment';
+    $commitments = $wpdb->get_results("SELECT a.content,a.time_created,a.allowed_thresholds FROM $table_name1 a , $table_name2 b 
+                                            WHERE a.id = b.commit_id AND b.user_id != $user_id");
     return $commitments;
 }
 
@@ -508,6 +567,32 @@ function cap_settings_callback(){
                 <input type='submit' name='submit' value='Submit'/>
               </form> <hr>";
     echo $output2;
+    $all_commitments = get_all_commitments();
+
+     echo "</br><h1 align='center'>Existing Commitments</h1><hr></br>";
+    $output3= "<table cellpadding='10' >
+                <tr>
+                   <td><h3>Content</h3></td>
+                   <td><h3>Allowed Thresholds</h3></td>
+                   <td></td>
+                </tr>";
+    foreach ($all_commitments as $commit){
+        $output3 = $output3."
+                <tr>
+                    <td>".$commit['content']."</td>
+                    <td>".$commit['allowed_thresholds']."</td>
+                    <td><form>
+                           <input type='hidden' value='".$commit['id']."'> 
+                           <input type='submit' value='Delete'>
+                        </form>
+                    </td>
+                </tr>";
+    }
+    $output3 = $output3." </table>";
+    echo $output3;
+
+
+
 }
 add_action('admin_menu', 'cap_add_submenu_page');
 
