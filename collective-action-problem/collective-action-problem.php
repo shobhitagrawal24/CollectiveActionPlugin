@@ -58,11 +58,17 @@ function my_plugin_create_db() {
                 
 }
 
-function create_new_commitment($commitment_content,$max_threshold,$threshold){
-     collective_log("Creating a New Commitment to be signed with Threshold = ".$max_threshold);
+function create_new_commitment(){
+
+     $commitment_content=$_POST['commit_content'];
+     $threshold=$_POST['threshold'];
+     foreach ($threshold as &$t){
+         $t=intval($t);
+     }
+    collective_log('SIGNING NEW COMMITMENT data '.$commitment_content.' '.$threshold[0]);
      global $wpdb;
         $threshold_string = json_encode($threshold);
-	if(!$commitment_content || !$max_threshold){
+	if(!$commitment_content){
 		return false;	
 	}
 	
@@ -73,14 +79,15 @@ function create_new_commitment($commitment_content,$max_threshold,$threshold){
                 $table_name,
                 array(
                     'time_created'=> $date,
-                    'max_threshold'=> $max_threshold,
                     'current_count'=> 0,
                     'content'=> $commitment_content,
                     'allowed_thresholds'=>json_encode($threshold)
                 )
              );
-        return true;
+        wp_redirect('/wp-admin/options-general.php?page=collactprob');
+        return false;
 }
+add_action('wp_ajax_create_new_commitment', 'create_new_commitment');
 
 add_action('wp_ajax_sign_commitment', 'sign_commitment');
 
@@ -91,8 +98,9 @@ add_action('wp_ajax_sign_commitment', 'sign_commitment');
  */
 function render_commitments(){
     ob_start();
-    ?><?php
+
     global $commitments;
+    $url=$_SERVER['REQUEST_URI'];
     global $current_user;
     $commitments =get_all_commitments();?>
 
@@ -105,6 +113,7 @@ function render_commitments(){
                     <form style="background-color:lightgrey" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                         <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
                         <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
+                        <input type="hidden" name="url"value="<?php echo $url?>">
                         <div><h1><?php echo $commitment['content']?></h1></div>
                         <div>
                             <label for="threshold">Select Threshold</label>
@@ -142,6 +151,9 @@ function sign_commitment(){
     $commitment_id=$_POST['commit_id'];
     $user_id=$_POST['user_id'];
     $user_threshold =$_POST['threshold'];
+    $url=$_POST['url'];
+    $affiliation =$_POST['affiliation'];
+    $name = $_POST['user_name'];
 
     /*$commitment_id=1;
     $user_id=31;
@@ -169,7 +181,8 @@ function sign_commitment(){
                 )
              );
         collective_Algorithm($commitment_id,$user_id,$user_threshold);
-        return true;
+        wp_redirect($url);
+        return false;
 }
 
 
@@ -287,12 +300,54 @@ function update_current_counter($commit_id,$count){
  * @param Integer $userid 
  * @return Array rows indexed from 0
  */
-function get_public_commit_of_user($userid){
+function get_commit_of_user($userid){
     global $wpdb;
     $table_name =$wpdb->prefix . 'psy_user_commitment';
-    $commitments = $wpdb->get_results("SELECT * from $table_name WHERE user_id = $userid AND status ='PUBLIC' ",'ARRAY_A');
+    $commitments = $wpdb->get_results("SELECT * from $table_name WHERE user_id = $userid ",'ARRAY_A');
     return $commitments;
 }
+
+function render_user_commitments(){
+    ob_start();
+    global $current_user;
+    $user_commitments = get_commit_of_user($current_user->ID);?>
+    <form>
+        <h3 align="center">Your Commitments</h3>
+        <h5> Total Signed Commitments : <?php echo sizeof($user_commitments) ?></h5>
+        <hr>
+        <table>
+            <tr>
+                <td>Commitment ID</td>
+                <td>Content</td>
+                <td>Time Signed At</td>
+                <td>Selected Threshold</td>
+                <td>Status</td>
+            </tr>
+            <ol>
+                <?php
+                foreach ($user_commitments as $c){ ?>
+
+                    <tr>
+                        <td><div><?php echo $c['commit_id'] ?></div></td>
+                        <td><div>This Is the content</div></td>
+                        <td><div><?php echo $c['time_signed']?></div></td>
+                        <td><div><?php echo $c['user_threshold'] ?></div></td>
+                        <td><div><?php echo $c['status'] ?></div></td>
+
+                    </tr>
+
+
+                <?php }?>
+            </ol>
+        </table>
+    </form>
+<?php
+
+    return ob_get_clean();
+}
+
+add_shortcode("user-commitments","render_user_commitments");
+
 /**
  * Update a user's commitment. Only if it is not PUBLIC yet 
  * @global type $wpdb
@@ -301,6 +356,11 @@ function get_public_commit_of_user($userid){
  * @param type $threshold
  * @return String eg: "PUBLIC"
  */
+
+function get_all_public_commitments(){
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'psy_user_commitment';
+}
 function update_user_commitment($userId,$commitId,$threshold){
     // TODO: Not Yet complete
     global $wpdb;
@@ -399,16 +459,59 @@ function cap_add_submenu_page(){
         'cap_settings_callback');   //Callback to render settings page
 }
 function cap_settings_callback(){
-    echo "This is for the settings page of Collective Action Problem. ";
+    echo"</br></br>";
+    echo " This is for the settings page of Collective Action Problem. ";
     echo "Use this page to render the settings of the Collective Action Problem Plugin.";
-    $output ="<form id='create_commit'>
-                <h1>Create Commitment</h1><br/>
+    echo "<hr> <form id='create_commit' method='post' action= '";
+
+    echo esc_url( admin_url('admin-ajax.php') );
+        $output="'>
+                <script>
+                function addNewThreshold(){
+                  
+                    // Create an input type dynamically
+                    var element = document.createElement('input');
+                    //Assign different attributes to the element.
+                    element.setAttribute('type', 'text');
+                    element.setAttribute('value', '');
+                    element.setAttribute('name', 'threshold[]');
+                    element.setAttribute('style', 'width:50px');
+                    element.setAttribute('required','required');
+                    
+                    
+                    // Ordered List
+                    var l =document.createElement('li');
+                    l.appendChild(element);
+                
+                // 'foobar' is the div id, where new fields are to be added
+                    var div = document.getElementById('t_id');
+                
+                //Append the element in page (in span).
+                    
+                    div.appendChild(l);
+                }
+                </script>
+                <h1 align='center'>Create New Commitment</h1><hr><br/>
                 <h3 >Enter commitment description</h3>
-                <textarea rows='4' form='create_commit' cols='50' id='c_content' name='commit_content' placeholder='Enter your Commitment description here..'></textarea>
-              </form>";
-    echo $output;
+                <textarea required='required' rows='4' form='create_commit' cols='50' id='c_content' name='commit_content' placeholder='Enter your Commitment description here..'></textarea>
+                <div >
+                <h3>Enter thresholds</h3>
+                <ol id ='t_id'>
+                    <li><input name='threshold[]' required='required' type='text' style='width:50px'></li>
+                    <li><input name='threshold[]'required='required' type='text' style='width:50px'></li>
+                </ol>
+                </div>
+                <a href='#' onclick='addNewThreshold()' value='Add'><div>Add more</div></a>";
+        echo $output;
+        echo wp_nonce_field('create_new_commitment','security-code-here');
+        $output2 ="<input type='hidden' name='action' value='create_new_commitment'></br></br></br>
+                <input type='submit' name='submit' value='Submit'/>
+              </form> <hr>";
+    echo $output2;
 }
 add_action('admin_menu', 'cap_add_submenu_page');
+
+
 
 
 
