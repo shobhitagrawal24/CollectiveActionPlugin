@@ -91,7 +91,13 @@ function create_new_commitment(){
 add_action('wp_ajax_create_new_commitment', 'create_new_commitment');
 
 add_action('wp_ajax_sign_commitment', 'sign_commitment');
+add_action( 'init','load_custom_css');
 
+function load_custom_css(){
+    wp_register_style('collective-css', plugins_url('collective.css',__FILE__ ));
+    wp_enqueue_style('collective-css');
+    collective_log("Css Loaded");
+}
 /**
  * Used to render commitments using shortcode
  *
@@ -110,28 +116,34 @@ function render_commitments(){
 
             <?php foreach($commitments as $commitment) : ?>
                 <li>
-
-                    <form style="background-color:lightgrey" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
-                        <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
-                        <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
-                        <input type="hidden" name="url"value="<?php echo $url?>">
-                        <div><h1><?php echo $commitment['content']?></h1></div>
-                        <div>
-                            <label for="threshold">Select Threshold</label>
-                            <select  name="threshold">
-                                <?php
-                                foreach (json_decode($commitment['allowed_thresholds']) as $threshold){
-                                    ?>
-                                    <option value="<?php echo intval($threshold) ?>"><?php echo intval($threshold)?></option>
-                                    <?php
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <?php wp_nonce_field('sign_commitment','security-code-here'); ?>
-                        <input type="hidden" name="action" value="sign_commitment">
-                        <input align="right" type="submit" name="submit" value="Sign"/>
-                    </form>
+                    <div >
+                        <form class="sel-form" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
+                            <div class="sel-container">
+                                <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
+                                <input type="hidden" name="user_name" value="<?php echo $current_user->first_name.' '.$current_user->last_name ?>">
+                                <input type="hidden" name="url"value="<?php echo $url?>">
+                                <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
+                                <div class="sel-column two-third"><p><?php echo $commitment['content']?></p></div>
+                                <div class="sel-column one-third">
+                                    <div class="sel-sel">
+                                        <label>Select Threshold:</label>
+                                        <select  name="threshold">
+                                            <?php
+                                            foreach (json_decode($commitment['allowed_thresholds']) as $threshold){
+                                                ?>
+                                                <option value="<?php echo intval($threshold) ?>"><?php echo intval($threshold)?></option>
+                                                <?php
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <?php wp_nonce_field('sign_commitment','security-code-here'); ?>
+                                    <input type="hidden" name="action" value="sign_commitment">
+                                    <input id="col_submit" class ="submita" type="submit" name="submit" value="Sign"/>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </br>
                 </li>
             <?php endforeach; ?>
@@ -141,6 +153,7 @@ function render_commitments(){
 
     return ob_get_clean();
 }
+wp_enqueue_style( 'collective', get_stylesheet_uri() );
 add_shortcode("collective-commitments","render_commitments");
 
 /*
@@ -579,7 +592,7 @@ function cap_settings_callback(){
     foreach ($all_commitments as $commit){
         $output3 = $output3."
                 <tr>
-                    <td>".$commit['content']."</td>
+                    <td>".$commit['content']."</td>lo
                     <td>".$commit['allowed_thresholds']."</td>
                     <td><form>
                            <input type='hidden' value='".$commit['id']."'> 
