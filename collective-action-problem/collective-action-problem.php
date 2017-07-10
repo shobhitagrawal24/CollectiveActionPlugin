@@ -113,6 +113,12 @@ if(is_user_logged_in()){
     $commitments =get_unsigned_commitments($current_user->ID);?>
 
     <div>
+        <?php if(sizeof($commitments)==0){
+            ?>
+            <h1 align="center">Hurray, No More Commitments to Sign</h1>
+            <?php
+
+        } ?>
 
 
             <?php foreach($commitments as $commitment) : ?>
