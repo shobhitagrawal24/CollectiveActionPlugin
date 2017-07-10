@@ -616,7 +616,7 @@ function cap_settings_callback(){
     foreach ($all_commitments as $commit){
         $output3 = $output3."
                 <tr>
-                    <td>".$commit['content']."</td>lo
+                    <td>".$commit['content']."</td>
                     <td>".$commit['allowed_thresholds']."</td>
                     <td><form method='post' action='". esc_url( admin_url('admin-ajax.php') ) ."'>
                    " . wp_nonce_field('remove_commitment','security-code-here')." 
