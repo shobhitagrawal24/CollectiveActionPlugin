@@ -1,4 +1,3 @@
-
 <?php
 /**
  * Plugin Name: Collective Action Problem
@@ -105,22 +104,25 @@ function load_custom_css(){
  */
 function render_commitments(){
     ob_start();
+if(is_user_logged_in()){
+
 
     global $commitments;
     $url=$_SERVER['REQUEST_URI'];
     global $current_user;
-    $commitments =get_all_commitments();?>
+    $commitments =get_unsigned_commitments($current_user->ID);?>
 
     <div>
-        <ol>
+
 
             <?php foreach($commitments as $commitment) : ?>
-                <li>
+
                     <div >
                         <form class="sel-form" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                             <div class="sel-container">
                                 <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
                                 <input type="hidden" name="user_name" value="<?php echo $current_user->first_name.' '.$current_user->last_name ?>">
+                                <input type="hidden" name = "affiliation" value="<?php $current_user->user_description?>">
                                 <input type="hidden" name="url"value="<?php echo $url?>">
                                 <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
                                 <div class="sel-column two-third"><p><?php echo $commitment['content']?></p></div>
@@ -139,18 +141,20 @@ function render_commitments(){
                                     </div>
                                     <?php wp_nonce_field('sign_commitment','security-code-here'); ?>
                                     <input type="hidden" name="action" value="sign_commitment">
-                                    <input id="col_submit" class ="submita" type="submit" name="submit" value="Sign"/>
+                                    <div class="my_submit">
+                                    <input id="col_submit" type="submit" name="submit" value="Sign"/>
+                                    </div>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </br>
-                </li>
+
             <?php endforeach; ?>
-        </ol>
+
     </div>
     <?php
-
+}
     return ob_get_clean();
 }
 wp_enqueue_style( 'collective', get_stylesheet_uri() );
@@ -482,12 +486,32 @@ function get_all_commitments(){
 
 function get_unsigned_commitments($user_id){
     collective_log("Getting Unsigned Commits for user Id = ".$user_id);
-    global $wpdb;
+    /*global $wpdb;
     $table_name1 =$wpdb->prefix . 'psy_commitment';
     $table_name2 =$wpdb->prefix . 'psy_user_commitment';
     $commitments = $wpdb->get_results("SELECT a.content,a.time_created,a.allowed_thresholds FROM $table_name1 a , $table_name2 b 
-                                            WHERE a.id = b.commit_id AND b.user_id != $user_id");
+                                            WHERE a.id = b.commit_id AND b.user_id != $user_id");*/
+    $available_commitments = get_all_commitments();
+    $commitments=[];
+
+    foreach($available_commitments as &$c){
+        collective_log("GIT CALLED");
+        if(get_one_signed_commitment($c['id'],$user_id)){
+            collective_log("GOT ONE Commitment".get_all_commitments($c['id'],$user_id)[0]['commit_id']);
+            array_pop($c);
+        }else{
+            array_push($commitments,$c);
+        }
+    }
+    collective_log("SIZE OF".sizeof($commitments));
     return $commitments;
+}
+
+function get_one_signed_commitment($commiy_id,$user_id){
+    global $wpdb;
+    $table_name2 =$wpdb->prefix . 'psy_user_commitment';
+    $commitment = $wpdb->get_results("SELECT * FROM $table_name2 WHERE user_id =$user_id AND commit_id = $commiy_id",ARRAY_A);
+    return $commitment;
 }
 
 
@@ -594,8 +618,10 @@ function cap_settings_callback(){
                 <tr>
                     <td>".$commit['content']."</td>lo
                     <td>".$commit['allowed_thresholds']."</td>
-                    <td><form>
-                           <input type='hidden' value='".$commit['id']."'> 
+                    <td><form method='post' action='". esc_url( admin_url('admin-ajax.php') ) ."'>
+                   " . wp_nonce_field('remove_commitment','security-code-here')." 
+                           <input type='hidden' name='id' value='".$commit['id']."'> 
+                           <input type='hidden' name='action' value='remove_commitment'>
                            <input type='submit' value='Delete'>
                         </form>
                     </td>
@@ -609,8 +635,15 @@ function cap_settings_callback(){
 }
 add_action('admin_menu', 'cap_add_submenu_page');
 
+function remove_commitment(){
+    collective_log('Removing commitment');
+    $commitment_id=$_POST['id'];
+    global $wpdb;
+    $table_name2 =$wpdb->prefix . 'psy_commitment';
+    $status = $wpdb->delete($table_name2,['id'=>$commitment_id]);
+    wp_redirect('/wp-admin/options-general.php?page=collactprob');
+    return false;
+}
+add_action('wp_ajax_remove_commitment', 'remove_commitment');
 
-
-
-
-
+?>

@@ -17,14 +17,14 @@ p {
   display: table;
   width: 100%;
   padding: 5px;
-  border: 2px solid #3B8EC2;
+  border: 2px solid black;
 }
 
 .sel-column {
   display: table-cell;
   height: 100%;
   padding: 10px;
-  border-right: 2px solid #3B8EC2;
+  border-right: 2px solid black;
   vertical-align: top;
   background-color: #FFF;
 }
@@ -59,7 +59,7 @@ p {
   background: transparent;
   border: none;
   height: 29px;
-  padding: 5px;
+  padding: 2px;
   width: 100%;
 
   -webkit-appearance: menulist;
@@ -72,7 +72,7 @@ p {
   cursor: default;
   border-width: 2px;
   border-style: solid;
-  border-color: #3B8EC2;
+  border-color:black;
   border-image: initial;
 }
 
@@ -80,11 +80,11 @@ p {
   margin-top: 30px;
 }
 
-.submita {
+.my_submit submit  {
     height: 40px;
     width: 100px;
     background-color: #FFF;
-    border: 2px solid #3B8EC2;
+    border: 2px solid black;
     border-radius: 50px;
     color: #3B8EC2;
     transition: 0.4s;
@@ -93,8 +93,8 @@ p {
     float: right;
 }
 
-.submita:hover {
-    background-color: #3B8EC2;
+.my_submit submit:hover {
+    background-color: black;
     color: #FFF;
     transition: 0.4s;
 }
