@@ -122,7 +122,7 @@ if(is_user_logged_in()){
                             <div class="sel-container">
                                 <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
                                 <input type="hidden" name="user_name" value="<?php echo $current_user->first_name.' '.$current_user->last_name ?>">
-                                <input type="hidden" name = "affiliation" value="<?php $current_user->user_description?>">
+                                <input type="hidden" name = "affiliation" value="<?php $current_user->description?>">
                                 <input type="hidden" name="url"value="<?php echo $url?>">
                                 <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
                                 <div class="sel-column two-third"><p><?php echo $commitment['content']?></p></div>
@@ -350,7 +350,7 @@ function render_user_commitments(){
 
                     <tr>
                         <td><div><?php echo $c['commit_id'] ?></div></td>
-                        <td><div>This Is the content</div></td>
+                        <td><div><?php echo $c['affiliation']?></div></td>
                         <td><div><?php echo $c['time_signed']?></div></td>
                         <td><div><?php echo $c['user_threshold'] ?></div></td>
                         <td><div><?php echo $c['status'] ?></div></td>
