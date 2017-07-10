@@ -324,7 +324,9 @@ function update_current_counter($commit_id,$count){
 function get_commit_of_user($userid){
     global $wpdb;
     $table_name =$wpdb->prefix . 'psy_user_commitment';
-    $commitments = $wpdb->get_results("SELECT * from $table_name WHERE user_id = $userid ",'ARRAY_A');
+    $table_name1 =$wpdb->prefix . 'psy_commitment';
+    $commitments = $wpdb->get_results("SELECT a.time_signed,a.user_threshold,a.status,b.content
+                    from $table_name a, $table_name1 b WHERE a.commit_id = b.id AND a.user_id = $userid ",'ARRAY_A');
     return $commitments;
 }
 
@@ -338,7 +340,7 @@ function render_user_commitments(){
         <hr>
         <table>
             <tr>
-                <td>Commitment ID</td>
+
                 <td>Content</td>
                 <td>Time Signed At</td>
                 <td>Selected Threshold</td>
@@ -349,8 +351,7 @@ function render_user_commitments(){
                 foreach ($user_commitments as $c){ ?>
 
                     <tr>
-                        <td><div><?php echo $c['commit_id'] ?></div></td>
-                        <td><div><?php echo $c['affiliation']?></div></td>
+                        <td><div><?php echo $c['content']?></div></td>
                         <td><div><?php echo $c['time_signed']?></div></td>
                         <td><div><?php echo $c['user_threshold'] ?></div></td>
                         <td><div><?php echo $c['status'] ?></div></td>
