@@ -119,9 +119,19 @@ if(is_user_logged_in()){
             <?php
 
         } ?>
+        <?php $success = get_query_var( 'success', false );
+        if($success==true){
+            ?>
+
+            <h1>Thanks, You Successfully Signed A Commitment</h1>
+            <?php
+        }
+
+        ?>
 
 
             <?php foreach($commitments as $commitment) : ?>
+
 
                     <div >
                         <form class="sel-form" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
@@ -165,6 +175,66 @@ if(is_user_logged_in()){
 }
 wp_enqueue_style( 'collective', get_stylesheet_uri() );
 add_shortcode("collective-commitments","render_commitments");
+
+/**
+ * Render One commitment using short code
+ * @return string
+ */
+function render_one_commitment($atts = [], $content = null, $tag = ''){
+
+    ob_start();
+    if(is_user_logged_in()){
+
+        collective_log("COMMITMENT ID FROM RENDER =".$atts['id']);
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'psy_commitment';
+        global $commitment;
+        $url=$_SERVER['REQUEST_URI'];
+        global $current_user;
+        $commitment_id = $atts['id'];
+        $commitment = $wpdb->get_results("SELECT * from $table_name WHERE id = $commitment_id",'ARRAY_A')[0];?>
+
+        <div>
+                <div >
+                    <form class="sel-form" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
+                        <div class="sel-container">
+                            <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
+                            <input type="hidden" name="user_name" value="<?php echo $current_user->first_name.' '.$current_user->last_name ?>">
+                            <input type="hidden" name = "affiliation" value="<?php echo $current_user->description ?> ">
+                            <input type="hidden" name="url"value="<?php echo $url?>">
+                            <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
+                            <div class="sel-column two-third"><p><?php echo $commitment['content']?></p></div>
+                            <div class="sel-column one-third">
+                                <div class="sel-sel">
+                                    <label>Select Threshold:</label>
+                                    <select  name="threshold">
+                                        <?php
+                                        foreach (json_decode($commitment['allowed_thresholds']) as $threshold){
+                                            ?>
+                                            <option value="<?php echo intval($threshold) ?>"><?php echo intval($threshold)?></option>
+                                            <?php
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <?php wp_nonce_field('sign_commitment','security-code-here'); ?>
+                                <input type="hidden" name="action" value="sign_commitment">
+                                <div class="my_submit">
+                                    <input id="col_submit" type="submit" name="submit" value="Sign"/>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                </br>
+
+        </div>
+        <?php
+    }
+    return ob_get_clean();
+}
+
+add_shortcode("collective-one-commitment","render_one_commitment");
 
 /*
  * This function is used to insert user commitment in to DB
@@ -502,7 +572,6 @@ function get_unsigned_commitments($user_id){
     $commitments=[];
 
     foreach($available_commitments as &$c){
-        collective_log("GIT CALLED");
         if(get_one_signed_commitment($c['id'],$user_id)){
             collective_log("GOT ONE Commitment".get_all_commitments($c['id'],$user_id)[0]['commit_id']);
             array_pop($c);
