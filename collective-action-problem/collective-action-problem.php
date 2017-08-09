@@ -50,6 +50,8 @@ function my_plugin_create_db() {
 			status varchar(20) NOT NULL,
 			affiliation varchar(250),
 			user_name varchar(250),
+			ORCID varchar(30),
+			website varchar(100),
 			PRIMARY KEY (user_id,commit_id)
 		) $charset_collate;";
 
@@ -139,6 +141,8 @@ if(is_user_logged_in()){
                                 <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
                                 <input type="hidden" name="user_name" value="<?php echo $current_user->first_name.' '.$current_user->last_name ?>">
                                 <input type="hidden" name = "affiliation" value="<?php echo $current_user->description ?> ">
+                                <input type="hidden" name = "orcid" value="<?php  echo $current_user->orcid ?> ">
+                                <input type="hidden" name = "website" value="<?php  echo $current_user->website ?> ">
                                 <input type="hidden" name="url"value="<?php echo $url?>">
                                 <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
                                 <div class="sel-column two-third"><p><?php echo $commitment['content']?></p></div>
@@ -201,6 +205,8 @@ function render_one_commitment($atts = [], $content = null, $tag = ''){
                             <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
                             <input type="hidden" name="user_name" value="<?php echo $current_user->first_name.' '.$current_user->last_name ?>">
                             <input type="hidden" name = "affiliation" value="<?php echo $current_user->description ?> ">
+                            <input type="hidden" name = "orcid" value="<?php echo $current_user->orcid ?> ">
+                            <input type="hidden" name = "website" value="<?php echo $current_user->website ?> ">
                             <input type="hidden" name="url"value="<?php echo $url?>">
                             <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
                             <div class="sel-column two-third"><p><?php echo $commitment['content']?></p></div>
@@ -247,6 +253,8 @@ function sign_commitment(){
     $user_threshold =$_POST['threshold'];
     $url=$_POST['url'];
     $affiliation =$_POST['affiliation'];
+    $orcid = $_POST['orcid'];
+    $website = $_POST['website'];
     $name = $_POST['user_name'];
     collective_log("USER NAME =".$name);
 
@@ -274,7 +282,9 @@ function sign_commitment(){
                     'user_threshold'=> $user_threshold,
                     'status'=> 'PRIVATE',
                     'affiliation'=>$affiliation,
-                    'user_name'=>$name
+                    'user_name'=>$name,
+                    'ORCID'=>$orcid,
+                    'website'=>$website
                 )
              );
         collective_Algorithm($commitment_id,$user_id,$user_threshold);
@@ -459,7 +469,7 @@ function get_public_commitments(){
     global $wpdb;
     $table_name1 = $wpdb->prefix . 'psy_user_commitment';
     $table_name2 = $wpdb->prefix . 'psy_commitment';
-    $query = "SELECT a.content , b.time_signed,b.user_name,b.affiliation FROM $table_name1 b , $table_name2 a 
+    $query = "SELECT a.content , b.time_signed,b.user_name,b.ORCID,b.website,b.affiliation FROM $table_name1 b , $table_name2 a 
               WHERE a.id = b.commit_id AND b.status = 'PUBLIC'";
     $commitments = $wpdb->get_results($query,"ARRAY_A");
     return $commitments;
@@ -477,22 +487,20 @@ $user_commitments = get_public_commitments()?>
             <tr>
                 <td><h6>Signed By</h6></td>
                 <td><h6>From</h6></td>
+                <td><h6>ORCID</h6></td>
                 <td><h6>Time Signed At</h6></td>
                 <td><h6>Commitment</h6></td>
             </tr>
             <ol>
                 <?php
                 foreach ($user_commitments as $c){ ?>
-
                     <tr>
-                        <td><div><?php echo $c['user_name'] ?></div></td>
+                        <td><a href= "http://<?php echo $c['website']?>" target="_blank"><?php echo $c['user_name'] ?></a></td>
                         <td><div><?php echo $c['affiliation'] ?></div></td>
+                        <td><div><?php echo $c['ORCID'] ?></div></td>
                         <td><div><?php echo $c['time_signed']?></div></td>
                         <td><div><?php echo $c['content'] ?></div></td>
-
                     </tr>
-
-
                 <?php }?>
             </ol>
         </table>
