@@ -4,7 +4,7 @@
  * Plugin URI: http://www.researchtransparency.org/
  * Description: This Plugin Solves The Collective Action Problem.
  * Version: 1.0.0
- * Author: Shobhit Agrawal
+ * Author: Shobhit Agrawal, Abhishek Kapoor, Ankit Gupta
  * Author URI: http://www.researchtransparency.org/
  */
 
@@ -141,8 +141,8 @@ if(is_user_logged_in()){
                                 <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
                                 <input type="hidden" name="user_name" value="<?php echo $current_user->first_name.' '.$current_user->last_name ?>">
                                 <input type="hidden" name = "affiliation" value="<?php echo $current_user->description ?> ">
-                                <input type="hidden" name = "orcid" value="<?php  echo $current_user->orcid ?> ">
-                                <input type="hidden" name = "website" value="<?php  echo $current_user->website ?> ">
+                                <input type="hidden" name = "orcid" value="<?php  echo $current_user->nickname ?> ">
+                                <input type="hidden" name = "website" value="<?php  echo $current_user->linkedin ?> ">
                                 <input type="hidden" name="url"value="<?php echo $url?>">
                                 <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
                                 <div class="sel-column two-third"><p><?php echo $commitment['content']?></p></div>
@@ -205,8 +205,8 @@ function render_one_commitment($atts = [], $content = null, $tag = ''){
                             <input type="hidden" name="user_id" value="<?php echo $current_user->ID ?>">
                             <input type="hidden" name="user_name" value="<?php echo $current_user->first_name.' '.$current_user->last_name ?>">
                             <input type="hidden" name = "affiliation" value="<?php echo $current_user->description ?> ">
-                            <input type="hidden" name = "orcid" value="<?php echo $current_user->orcid ?> ">
-                            <input type="hidden" name = "website" value="<?php echo $current_user->website ?> ">
+                            <input type="hidden" name = "orcid" value="<?php echo $current_user->nickname ?> ">
+                            <input type="hidden" name = "website" value="<?php echo $current_user->linkedin ?> ">
                             <input type="hidden" name="url"value="<?php echo $url?>">
                             <input type="hidden" name="commit_id" value="<?php echo $commitment['id']?>">
                             <div class="sel-column two-third"><p><?php echo $commitment['content']?></p></div>
